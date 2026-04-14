@@ -3,7 +3,7 @@ spring:
     name: routine
 
   datasource:
-    url: ${DB_URL}
+    url: ${DB_URL}?sslmode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
