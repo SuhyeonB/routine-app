@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<div class="max-w-lg mx-auto px-4 py-8">
+
+    <!-- 헤더 -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">오늘의 루틴</h1>
+        <div class="flex gap-2">
+            <a href="/statistics" class="text-sm text-gray-500 bg-white border border-gray-200 rounded-full px-4 py-2">통계</a>
+            <a href="/categories" class="text-sm text-gray-500 bg-white border border-gray-200 rounded-full px-4 py-2">카테고리</a>
+            <a href="/routines/new" class="text-sm text-white bg-black rounded-full px-4 py-2">+ 추가</a>
+        </div>
+    </div>
+
+    <!-- 루틴 목록 -->
+    <div class="flex flex-col gap-3">
+        <div th:each="routine : ${routines}"
+             class="bg-white rounded-2xl px-5 py-4 shadow-sm flex justify-between items-center">
+
+            <!-- 클릭 시 모달 -->
+            <div class="flex items-center gap-3 cursor-pointer flex-1"
+                 th:data-title="${routine.title}"
+                 th:data-memo="${routine.memo ?: ''}"
+                 th:data-repeat="${routine.repeatType}"
+                 th:data-category="${routine.category?.name ?: ''}"
+                 th:data-color="${routine.category?.color ?: ''}"
+                 onclick="openModal(this)">
+
+                <!-- 카테고리 색상 -->
+                <div class="w-3 h-3 rounded-full flex-shrink-0"
+                     th:style="${routine.category != null} ? 'background-color:' + ${routine.category.color} : 'background-color:#e5e7eb'">
+                </div>
+
+                <div>
+                    <p th:text="${routine.title}" class="font-medium text-gray-800"></p>
+                    <p th:text="${routine.category?.name}" class="text-xs text-gray-400 mt-1"></p>
+                </div>
+            </div>
+
+            <!-- 체크 버튼 -->
+            <form th:action="@{/checks/{id}/toggle(id=${routine.id})}" method="post">
+                <input type="hidden" name="date" th:value="${today}"/>
+                <button type="submit"
+                        th:classappend="${checkedIds.contains(routine.id)} ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'"
+                        class="rounded-full w-8 h-8 text-sm font-bold">
+                    ✓
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 모달 -->
+<div id="modal" class="fixed inset-0 bg-black bg-opacity-30 flex items-end justify-center hidden z-50"
+     onclick="closeModal()">
+    <div class="bg-white rounded-t-3xl w-full max-w-lg px-6 py-6 pb-10" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+                <div id="modalColor" class="w-3 h-3 rounded-full"></div>
+                <h2 id="modalTitle" class="text-lg font-bold text-gray-800"></h2>
+            </div>
+            <button onclick="closeModal()" class="text-gray-400 text-xl">✕</button>
+        </div>
+        <div id="modalCategory" class="text-xs text-gray-400 mb-3"></div>
+        <div id="modalRepeat" class="text-sm text-gray-500 mb-3"></div>
+        <div id="modalMemo" class="text-sm text-gray-600 bg-gray-50 rounded-xl px-4 py-3"></div>
+        <div id="modalNoMemo" class="text-sm text-gray-300 hidden">메모 없음</div>
+    </div>
+</div>
+
+<script>
+    const repeatLabels = { DAILY: '매일', WEEKLY: '매주 특정 요일', EVERY_N: 'N일마다' }
+
+    function openModal(el) {
+        const title = el.dataset.title
+        const memo = el.dataset.memo
+        const repeatType = el.dataset.repeat
+        const categoryName = el.dataset.category
+        const categoryColor = el.dataset.color
+
+        document.getElementById('modalTitle').textContent = title
+        document.getElementById('modalColor').style.backgroundColor = categoryColor || '#e5e7eb'
+        document.getElementById('modalCategory').textContent = categoryName || ''
+        document.getElementById('modalRepeat').textContent = repeatLabels[repeatType] || repeatType
+
+        const memoEl = document.getElementById('modalMemo')
+        const noMemoEl = document.getElementById('modalNoMemo')
+        if (memo) {
+            memoEl.textContent = memo
+            memoEl.classList.remove('hidden')
+            noMemoEl.classList.add('hidden')
+        } else {
+            memoEl.classList.add('hidden')
+            noMemoEl.classList.remove('hidden')
+        }
+        document.getElementById('modal').classList.remove('hidden')
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.add('hidden')
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>루틴</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<div class="max-w-lg mx-auto px-4 py-8">
+
+    <!-- 헤더 -->
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/routines" class="text-gray-400 text-sm">← 뒤로</a>
+        <h1 class="text-2xl font-bold text-gray-800"
+            th:text="${routine != null} ? '루틴 수정' : '루틴 추가'"></h1>
+    </div>
+
+    <form th:action="${routine != null} ? @{/routines/{id}/edit(id=${routine.id})} : @{/routines}"
+          method="post" class="flex flex-col gap-4">
+
+        <!-- 제목 -->
+        <div class="bg-white rounded-2xl px-5 py-4 shadow-sm">
+            <label class="text-xs text-gray-400">제목</label>
+            <input type="text" name="title" placeholder="루틴 이름을 입력해줘요"
+                   th:value="${routine?.title}"
+                   class="w-full mt-1 text-gray-800 outline-none"/>
+        </div>
+
+        <!-- 메모 -->
+        <div class="bg-white rounded-2xl px-5 py-4 shadow-sm">
+            <label class="text-xs text-gray-400">메모</label>
+            <input type="text" name="memo" placeholder="선택사항"
+                   th:value="${routine?.memo}"
+                   class="w-full mt-1 text-gray-800 outline-none"/>
+        </div>
+
+        <!-- 반복 유형 -->
+        <div class="bg-white rounded-2xl px-5 py-4 shadow-sm">
+            <label class="text-xs text-gray-400">반복 유형</label>
+            <select name="repeatType" id="repeatType" onchange="toggleRepeatOptions()"
+                    class="w-full mt-1 text-gray-800 outline-none">
+                <option value="DAILY" th:selected="${routine?.repeatType?.name() == 'DAILY'}">매일</option>
+                <option value="WEEKLY" th:selected="${routine?.repeatType?.name() == 'WEEKLY'}">매주 특정 요일</option>
+                <option value="EVERY_N" th:selected="${routine?.repeatType?.name() == 'EVERY_N'}">N일마다</option>
+            </select>
+        </div>
+
+        <!-- 요일 선택 (WEEKLY용) -->
+        <div id="weeklyOptions" class="bg-white rounded-2xl px-5 py-4 shadow-sm"
+             th:classappend="${routine?.repeatType?.name() != 'WEEKLY'} ? 'hidden' : ''">
+            <label class="text-xs text-gray-400">요일 선택</label>
+            <div class="flex gap-2 mt-2">
+                <th:block th:each="day : ${ {'MON','TUE','WED','THU','FRI','SAT','SUN'} }">
+                    <label class="flex flex-col items-center gap-1">
+                        <input type="checkbox" name="repeatDays" th:value="${day}"
+                               th:checked="${routine?.repeatDays?.contains(day)}"/>
+                        <span class="text-xs text-gray-600" th:text="${day}"></span>
+                    </label>
+                </th:block>
+            </div>
+        </div>
+
+        <!-- N일마다 (EVERY_N용) -->
+        <div id="everyNOptions" class="bg-white rounded-2xl px-5 py-4 shadow-sm"
+             th:classappend="${routine?.repeatType?.name() != 'EVERY_N'} ? 'hidden' : ''">
+            <label class="text-xs text-gray-400">며칠마다?</label>
+            <input type="number" name="repeatInterval" placeholder="예: 3"
+                   th:value="${routine?.repeatInterval}"
+                   class="w-full mt-1 text-gray-800 outline-none"/>
+        </div>
+
+        <!-- 카테고리 -->
+        <div class="bg-white rounded-2xl px-5 py-4 shadow-sm">
+            <label class="text-xs text-gray-400">카테고리 (선택)</label>
+            <select name="categoryId" class="w-full mt-1 text-gray-800 outline-none">
+                <option value="">없음</option>
+                <option th:each="category : ${categories}"
+                        th:value="${category.id}"
+                        th:text="${category.name}"
+                        th:selected="${routine?.category?.id == category.id}">
+                </option>
+            </select>
+        </div>
+
+        <!-- 반복 종료일 -->
+        <div class="bg-white rounded-2xl px-5 py-4 shadow-sm">
+            <label class="text-xs text-gray-400">반복 종료일 (선택)</label>
+            <input type="date" name="repeatEndDate"
+                   th:value="${routine?.repeatEndDate}"
+                   class="w-full mt-1 text-gray-800 outline-none"/>
+        </div>
+
+        <!-- 제출 -->
+        <button type="submit"
+                class="w-full bg-black text-white rounded-full py-3 font-medium mt-2"
+                th:text="${routine != null} ? '수정' : '저장'">
+        </button>
+
+    </form>
+</div>
+
+<script>
+    function toggleRepeatOptions() {
+        const type = document.getElementById('repeatType').value
+        document.getElementById('weeklyOptions').classList.toggle('hidden', type !== 'WEEKLY')
+        document.getElementById('everyNOptions').classList.toggle('hidden', type !== 'EVERY_N')
+    }
+</script>
+
+</body>
+</html>
